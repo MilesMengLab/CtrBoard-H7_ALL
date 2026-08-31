@@ -56,12 +56,12 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-#define W25Qxx_NumByteToTest   	32*1024					// �������ݵĳ��ȣ�32K
+#define W25Qxx_NumByteToTest   	32*1024					// Flash 读写测试长度：32 KB
 
-int32_t OSPI_Status ; 		 //����־λ
+int32_t OSPI_Status ; 		 // OSPI 操作状态
 
-uint8_t  W25Qxx_WriteBuffer[W25Qxx_NumByteToTest];		//	д��������
-uint8_t  W25Qxx_ReadBuffer[W25Qxx_NumByteToTest];		//	����������
+uint8_t  W25Qxx_WriteBuffer[W25Qxx_NumByteToTest];		// 写入缓冲区
+uint8_t  W25Qxx_ReadBuffer[W25Qxx_NumByteToTest];		// 读取缓冲区
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -74,30 +74,30 @@ void MX_FREERTOS_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 /***************************************************************************************************
-*	�� �� ��: OSPI_W25Qxx_Test
-*	��ڲ���?: ��
-*	�� �� ֵ: OSPI_W25Qxx_OK - ���Գɹ���ͨ��
-*	��������: ���м򵥵Ķ�д���ԣ��������ٶ�
-*	˵    ��: ��	
+* 函 数 名: OSPI_W25Qxx_Test
+* 输入参数: 无
+* 返 回 值: OSPI_W25Qxx_OK 表示测试通过
+* 功能说明: 对 W25Q64 进行擦除、写入、读取、校验和读取速度测试
+* 注    意: 测试会擦除 Flash 起始地址处的 32 KB 数据
 ***************************************************************************************************/
 
-int8_t OSPI_W25Qxx_Test(void)		//Flash��д����
+int8_t OSPI_W25Qxx_Test(void)		// Flash 读写测试
 {
-    uint32_t i = 0X8000;	// ��������
-    uint32_t W25Qxx_TestAddr  =	0	;							// ���Ե�ַ	
-    uint32_t ExecutionTime_Begin;		// ��ʼʱ��
-    uint32_t ExecutionTime_End;		// ����ʱ��
-    uint32_t ExecutionTime;				// ִ��ʱ��	
-    float    ExecutionSpeed;			// ִ���ٶ�
+    uint32_t i = 0X8000;	// 循环索引
+    uint32_t W25Qxx_TestAddr  =	0	;							// 测试起始地址
+    uint32_t ExecutionTime_Begin;		// 开始时间
+    uint32_t ExecutionTime_End;		// 结束时间
+    uint32_t ExecutionTime;				// 执行时间
+    float    ExecutionSpeed;			// 执行速度
 
-// ���� >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   
-    
-    
-    ExecutionTime_Begin 	= HAL_GetTick();	// ��ȡ systick ��ǰʱ�䣬��λms
-    OSPI_Status 			= OSPI_W25Qxx_BlockErase_32K(W25Qxx_TestAddr);	// ����32K�ֽ�
-    ExecutionTime_End		= HAL_GetTick();	// ��ȡ systick ��ǰʱ�䣬��λms
-    
-    ExecutionTime = ExecutionTime_End - ExecutionTime_Begin; // �������ʱ�䣬��λms
+// 擦除测试
+
+
+    ExecutionTime_Begin 	= HAL_GetTick();	// 获取当前时间，单位：ms
+    OSPI_Status 			= OSPI_W25Qxx_BlockErase_32K(W25Qxx_TestAddr);	// 擦除 32 KB 块
+    ExecutionTime_End		= HAL_GetTick();	// 获取当前时间，单位：ms
+
+    ExecutionTime = ExecutionTime_End - ExecutionTime_Begin; // 计算耗时，单位：ms
     
     if( OSPI_Status == OSPI_W25Qxx_OK )
     {
@@ -109,18 +109,18 @@ int8_t OSPI_W25Qxx_Test(void)		//Flash��д����
         while (1);
     }   
     
-// д�� >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// 写入测试
 
-    for(i=0;i<W25Qxx_NumByteToTest;i++)  //�Ƚ�����д������
+    for(i=0;i<W25Qxx_NumByteToTest;i++)  // 填充待写入的数据
     {
         W25Qxx_WriteBuffer[i] = i;
     }
-    ExecutionTime_Begin 	= HAL_GetTick();	// ��ȡ systick ��ǰʱ�䣬��λms
-    OSPI_Status				= OSPI_W25Qxx_WriteBuffer(W25Qxx_WriteBuffer,W25Qxx_TestAddr,W25Qxx_NumByteToTest); // д������
-    ExecutionTime_End		= HAL_GetTick();	// ��ȡ systick ��ǰʱ�䣬��λms
-    
-    ExecutionTime  = ExecutionTime_End - ExecutionTime_Begin; 		// �������ʱ�䣬��λms
-    ExecutionSpeed = (float)W25Qxx_NumByteToTest / ExecutionTime ; // ����д���ٶȣ���λ KB/S
+    ExecutionTime_Begin 	= HAL_GetTick();	// 获取当前时间，单位：ms
+    OSPI_Status				= OSPI_W25Qxx_WriteBuffer(W25Qxx_WriteBuffer,W25Qxx_TestAddr,W25Qxx_NumByteToTest); // 写入数据
+    ExecutionTime_End		= HAL_GetTick();	// 获取当前时间，单位：ms
+
+    ExecutionTime  = ExecutionTime_End - ExecutionTime_Begin; 		// 计算耗时，单位：ms
+    ExecutionSpeed = (float)W25Qxx_NumByteToTest / ExecutionTime ; // 计算写入速度，单位：KB/s
     if( OSPI_Status == OSPI_W25Qxx_OK )
     {
         printf ("\r\nwrite succeed, data size: %d KB, time: %d ms, speed: %.2f KB/s\r\n",W25Qxx_NumByteToTest/1024,ExecutionTime,ExecutionSpeed);		
@@ -131,15 +131,15 @@ int8_t OSPI_W25Qxx_Test(void)		//Flash��д����
         while (1);
     }	
     
-// ��ȡ	>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> 
+// 读取测试
 
-    
-    ExecutionTime_Begin 	= HAL_GetTick();	// ��ȡ systick ��ǰʱ�䣬��λms	
-    OSPI_Status				= OSPI_W25Qxx_ReadBuffer(W25Qxx_ReadBuffer,W25Qxx_TestAddr,W25Qxx_NumByteToTest);	// ��ȡ����
-    ExecutionTime_End		= HAL_GetTick();	// ��ȡ systick ��ǰʱ�䣬��λms
-    
-    ExecutionTime  = ExecutionTime_End - ExecutionTime_Begin; 					// �������ʱ�䣬��λms
-    ExecutionSpeed = (float)W25Qxx_NumByteToTest/1024/1024 / ExecutionTime*1000 ; 	// �����ȡ�ٶȣ����? MB/S 
+
+    ExecutionTime_Begin 	= HAL_GetTick();	// 获取当前时间，单位：ms
+    OSPI_Status				= OSPI_W25Qxx_ReadBuffer(W25Qxx_ReadBuffer,W25Qxx_TestAddr,W25Qxx_NumByteToTest);	// 读取数据
+    ExecutionTime_End		= HAL_GetTick();	// 获取当前时间，单位：ms
+
+    ExecutionTime  = ExecutionTime_End - ExecutionTime_Begin; 					// 计算耗时，单位：ms
+    ExecutionSpeed = (float)W25Qxx_NumByteToTest/1024/1024 / ExecutionTime*1000 ; 	// 计算读取速度，单位：MB/s
     
     if( OSPI_Status == OSPI_W25Qxx_OK )
     {
@@ -150,11 +150,11 @@ int8_t OSPI_W25Qxx_Test(void)		//Flash��д����
         printf ("\r\nread error!!!!!  error code:%d\r\n",OSPI_Status);
         while (1);
     }   
-// ����У�� >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>   
-    
-    for(i=0;i<W25Qxx_NumByteToTest;i++)	//��֤�����������Ƿ����д�������
+// 数据校验
+
+    for(i=0;i<W25Qxx_NumByteToTest;i++)	// 检查读取数据是否与写入数据一致
     {
-        if( W25Qxx_WriteBuffer[i] != W25Qxx_ReadBuffer[i] )	//������ݲ���ȣ��򷵻�0	
+        if( W25Qxx_WriteBuffer[i] != W25Qxx_ReadBuffer[i] )	// 数据不一致时报告错误位置
         {
             printf ("\r\ndata check error!!!!!pos: %d\r\n",i);	
             while(1);
@@ -162,23 +162,23 @@ int8_t OSPI_W25Qxx_Test(void)		//Flash��д����
     }   
     printf ("\r\ncheck pass!!!!!\r\n"); 
     
-// ��ȡ��ƬFlash�����ݣ����Բ����ٶ� >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+// 读取整片 Flash，以减小毫秒计时精度对速度测试的影响
     
     printf ("\r\n*****************************************************************************************************\r\n");		
     printf ("\r\nIn the above test, the data read is relatively small and takes a short time. In addition, the minimum unit of measurement is ms, and the calculated reading speed has a large error.\r\n");		
     printf ("\r\nNext, read the entire flash data to test the speed. The speed error obtained in this way is relatively small.\r\n");		
     printf ("\r\nread start>>>>\r\n");		
-    ExecutionTime_Begin 	= HAL_GetTick();	// ��ȡ systick ��ǰʱ�䣬��λms		
-    
-    for(i=0;i<W25Qxx_FlashSize/(W25Qxx_NumByteToTest);i++)	// ÿ�ζ�ȡ W25Qxx_NumByteToTest �ֽڵ�����
+    ExecutionTime_Begin 	= HAL_GetTick();	// 获取当前时间，单位：ms
+
+    for(i=0;i<W25Qxx_FlashSize/(W25Qxx_NumByteToTest);i++)	// 每次读取一个测试缓冲区大小的数据
     {
-        OSPI_Status     = OSPI_W25Qxx_ReadBuffer(W25Qxx_ReadBuffer,W25Qxx_TestAddr,W25Qxx_NumByteToTest);	// ��ȡ����
+        OSPI_Status     = OSPI_W25Qxx_ReadBuffer(W25Qxx_ReadBuffer,W25Qxx_TestAddr,W25Qxx_NumByteToTest);	// 读取数据
         W25Qxx_TestAddr = W25Qxx_TestAddr + W25Qxx_NumByteToTest;		
     }
-    ExecutionTime_End   = HAL_GetTick();	// ��ȡ systick ��ǰʱ�䣬��λms
-    
-    ExecutionTime       = ExecutionTime_End - ExecutionTime_Begin; 								// �������ʱ�䣬��λms
-    ExecutionSpeed      = (float)W25Qxx_FlashSize/1024/1024 / ExecutionTime*1000  ; 	// �����ȡ�ٶȣ����? MB/S 
+    ExecutionTime_End   = HAL_GetTick();	// 获取当前时间，单位：ms
+
+    ExecutionTime       = ExecutionTime_End - ExecutionTime_Begin; 								// 计算耗时，单位：ms
+    ExecutionSpeed      = (float)W25Qxx_FlashSize/1024/1024 / ExecutionTime*1000  ; 	// 计算读取速度，单位：MB/s
 
     if( OSPI_Status == OSPI_W25Qxx_OK )
     {
@@ -190,7 +190,7 @@ int8_t OSPI_W25Qxx_Test(void)		//Flash��д����
         while (1);
     }	
     
-    return OSPI_W25Qxx_OK ;  // ����ͨ��				
+    return OSPI_W25Qxx_OK ;  // 测试通过
     
 }
 /* USER CODE END 0 */
@@ -242,9 +242,9 @@ int main(void)
   MX_TIM2_Init();
   MX_OCTOSPI2_Init();
   /* USER CODE BEGIN 2 */
-//    OSPI_W25Qxx_Init();     // ��ʼ��OSPI��W25Q64
+//    OSPI_W25Qxx_Init();     // 初始化 OSPI 和 W25Q64
 //    
-//    OSPI_W25Qxx_Test();     // Flash��д����
+//    OSPI_W25Qxx_Test();     // Flash 读写测试
   /* USER CODE END 2 */
 
   /* Call init function for freertos objects (in freertos.c) */
